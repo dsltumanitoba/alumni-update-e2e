@@ -21,7 +21,7 @@ fi
 # Capture exit code so we can still upload the report on failure.
 # --------------------------------------------------------------------------
 echo "=== Running Playwright tests ==="
-npx playwright test
+CI=true npx playwright test
 TEST_EXIT_CODE=$?
 
 # --------------------------------------------------------------------------
@@ -34,8 +34,14 @@ wget -q -O /tmp/azcopy.tar.gz "https://aka.ms/downloadazcopy-v10-linux"
 tar -xf /tmp/azcopy.tar.gz -C /tmp
 AZCOPY=$(find /tmp -name 'azcopy' -executable -type f | head -1)
 
-# Authenticate using the job's user-assigned managed identity
+# Authenticate using the job's user-assigned managed identity.
+# AZCOPY_MSI_CLIENT_ID is set as an env var on the Container Apps Job so
+# azcopy knows which identity to use.
 "$AZCOPY" login --login-type=MSI
+if [ $? -ne 0 ]; then
+  echo "ERROR: azcopy MSI login failed"
+  exit 1
+fi
 
 STORAGE_ACCOUNT="alumnie2ereports"
 WEB_URL="https://${STORAGE_ACCOUNT}.blob.core.windows.net/\$web"
@@ -46,10 +52,16 @@ RUN_ID="${CONTAINER_APP_JOB_EXECUTION_NAME:-$(date +%Y%m%d-%H%M%S)}"
 
 # Upload versioned archive under /runs/<RUN_ID>/ — auto-deleted after 30 days
 # by the storage lifecycle policy.
-(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/runs/${RUN_ID}/" --recursive --overwrite=true)
+(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/runs/${RUN_ID}/" --recursive --overwrite=true) || {
+  echo "ERROR: azcopy versioned upload failed"
+  exit 1
+}
 
 # Overwrite the root — always serves the most recent report at the stable URL.
-(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/" --recursive --overwrite=true)
+(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/" --recursive --overwrite=true) || {
+  echo "ERROR: azcopy root upload failed"
+  exit 1
+}
 
 echo ""
 echo "Report published:"
