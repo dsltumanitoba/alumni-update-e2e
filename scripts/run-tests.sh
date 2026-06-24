@@ -4,6 +4,8 @@
 # Runs Playwright E2E tests, then uploads the HTML report to Azure Blob Storage
 # regardless of whether tests passed or failed.
 
+set -euo pipefail
+
 cd /app
 
 # --------------------------------------------------------------------------
@@ -11,62 +13,41 @@ cd /app
 # --------------------------------------------------------------------------
 echo "=== Installing dependencies ==="
 npm ci
-if [ $? -ne 0 ]; then
-  echo "ERROR: npm ci failed — aborting"
-  exit 1
-fi
 
 # --------------------------------------------------------------------------
 # 2. Run Playwright tests
-# Capture exit code so we can still upload the report on failure.
+# Disable set -e temporarily so a test failure doesn't abort the upload step.
 # --------------------------------------------------------------------------
 echo "=== Running Playwright tests ==="
+set +e
 CI=true npx playwright test
 TEST_EXIT_CODE=$?
+set -e
+
+echo "=== Tests finished with exit code: $TEST_EXIT_CODE ==="
 
 # --------------------------------------------------------------------------
-# 3. Upload report to Azure Blob Storage
-# Uses azcopy with managed identity auth (no secrets needed).
+# 3. Upload report to Azure Blob Storage via managed identity (IMDS).
+# Uses scripts/upload-report.py — Python stdlib only, no extra installs.
+# AZCOPY_MSI_CLIENT_ID is set as an env var on the Container Apps Job so the
+# upload script knows which user-assigned identity to authenticate with.
 # --------------------------------------------------------------------------
 echo "=== Uploading report to Azure Blob Storage ==="
 
-wget -q -O /tmp/azcopy.tar.gz "https://aka.ms/downloadazcopy-v10-linux"
-tar -xf /tmp/azcopy.tar.gz -C /tmp
-AZCOPY=$(find /tmp -name 'azcopy' -executable -type f | head -1)
-
-# Authenticate using the job's user-assigned managed identity.
-# AZCOPY_MSI_CLIENT_ID is set as an env var on the Container Apps Job so
-# azcopy knows which identity to use.
-"$AZCOPY" login --login-type=MSI
-if [ $? -ne 0 ]; then
-  echo "ERROR: azcopy MSI login failed"
-  exit 1
-fi
-
-STORAGE_ACCOUNT="alumnie2ereports"
-WEB_URL="https://${STORAGE_ACCOUNT}.blob.core.windows.net/\$web"
-
 # Use the Container Apps Job execution name as the run ID (unique per execution).
-# Falls back to a timestamp if the env var isn't set (e.g. local testing).
+# Falls back to a timestamp when running outside Azure (e.g. local testing).
 RUN_ID="${CONTAINER_APP_JOB_EXECUTION_NAME:-$(date +%Y%m%d-%H%M%S)}"
 
-# Upload versioned archive under /runs/<RUN_ID>/ — auto-deleted after 30 days
-# by the storage lifecycle policy.
-(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/runs/${RUN_ID}/" --recursive --overwrite=true) || {
-  echo "ERROR: azcopy versioned upload failed"
-  exit 1
-}
+# Upload versioned archive (auto-deleted after 30 days by lifecycle policy)
+python3 scripts/upload-report.py playwright-report "runs/${RUN_ID}"
 
-# Overwrite the root — always serves the most recent report at the stable URL.
-(cd playwright-report && "$AZCOPY" copy "." "${WEB_URL}/" --recursive --overwrite=true) || {
-  echo "ERROR: azcopy root upload failed"
-  exit 1
-}
+# Overwrite root — stable URL always serves the most recent report
+python3 scripts/upload-report.py playwright-report ""
 
 echo ""
 echo "Report published:"
-echo "  Latest:   https://${STORAGE_ACCOUNT}.z13.web.core.windows.net/"
-echo "  This run: https://${STORAGE_ACCOUNT}.z13.web.core.windows.net/runs/${RUN_ID}/"
+echo "  Latest:   https://alumnie2ereports.z13.web.core.windows.net/"
+echo "  This run: https://alumnie2ereports.z13.web.core.windows.net/runs/${RUN_ID}/"
 
 # Exit with the Playwright exit code so the job shows as failed when tests fail.
 exit $TEST_EXIT_CODE
