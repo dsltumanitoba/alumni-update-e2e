@@ -34,6 +34,19 @@ echo "=== Tests finished with exit code: $TEST_EXIT_CODE ==="
 # --------------------------------------------------------------------------
 echo "=== Uploading report to Azure Blob Storage ==="
 
+# If Playwright failed to launch (e.g. browser issue), it may not generate
+# a report directory. Create a fallback so the upload step doesn't fail.
+if [ ! -f playwright-report/index.html ]; then
+  mkdir -p playwright-report
+  cat > playwright-report/index.html <<EOF
+<!DOCTYPE html><html><body>
+<h1>Run failed before report was generated</h1>
+<p>Playwright exit code: $TEST_EXIT_CODE</p>
+<p>Run ID: ${CONTAINER_APP_JOB_EXECUTION_NAME:-unknown}</p>
+</body></html>
+EOF
+fi
+
 # Use the Container Apps Job execution name as the run ID (unique per execution).
 # Falls back to a timestamp when running outside Azure (e.g. local testing).
 RUN_ID="${CONTAINER_APP_JOB_EXECUTION_NAME:-$(date +%Y%m%d-%H%M%S)}"
