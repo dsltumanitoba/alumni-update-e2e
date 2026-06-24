@@ -28,14 +28,36 @@ MSI_CLIENT_ID = os.environ.get("AZCOPY_MSI_CLIENT_ID", "")
 
 
 def get_token() -> str:
-    url = (
-        "http://169.254.169.254/metadata/identity/oauth2/token"
-        "?api-version=2018-02-01"
-        "&resource=https%3A%2F%2Fstorage.azure.com%2F"
-        f"&client_id={MSI_CLIENT_ID}"
-    )
-    req = urllib.request.Request(url, headers={"Metadata": "true"})
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    """
+    Get an Azure AD token for storage.azure.com using managed identity.
+
+    Azure Container Apps exposes identity tokens via IDENTITY_ENDPOINT +
+    IDENTITY_HEADER (not the standard IMDS at 169.254.169.254).
+    """
+    identity_endpoint = os.environ.get("IDENTITY_ENDPOINT", "")
+    identity_header = os.environ.get("IDENTITY_HEADER", "")
+
+    if identity_endpoint and identity_header:
+        # Container Apps managed identity endpoint
+        url = (
+            f"{identity_endpoint}"
+            "?resource=https://storage.azure.com/"
+            "&api-version=2019-08-01"
+            f"&client_id={MSI_CLIENT_ID}"
+        )
+        headers = {"X-IDENTITY-HEADER": identity_header}
+    else:
+        # Standard IMDS fallback (VMs, ACI, etc.)
+        url = (
+            "http://169.254.169.254/metadata/identity/oauth2/token"
+            "?api-version=2018-02-01"
+            "&resource=https%3A%2F%2Fstorage.azure.com%2F"
+            f"&client_id={MSI_CLIENT_ID}"
+        )
+        headers = {"Metadata": "true"}
+
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read())["access_token"]
 
 
@@ -104,6 +126,8 @@ if __name__ == "__main__":
     if not MSI_CLIENT_ID:
         print("ERROR: AZCOPY_MSI_CLIENT_ID env var is not set", file=sys.stderr)
         sys.exit(1)
+    if not os.environ.get("IDENTITY_ENDPOINT") and not os.environ.get("IDENTITY_HEADER"):
+        print("WARNING: IDENTITY_ENDPOINT/IDENTITY_HEADER not set — falling back to IMDS")
 
     print(f"Uploading {report_dir}/ → {CONTAINER}/{dest_prefix or '(root)'}")
     upload_directory(report_dir, dest_prefix)
