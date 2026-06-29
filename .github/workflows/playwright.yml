@@ -5,6 +5,11 @@ on:
   #   - cron: '0 13 * * *'   # 8:00 AM CDT (UTC-5)
   #   - cron: '0 21 * * *'   # 4:00 PM CDT (UTC-5)
   workflow_dispatch:
+    inputs:
+      test_filter:
+        description: 'Test to run — file name (e.g. validation.spec.ts) or grep pattern (e.g. "personal contact"). Leave blank to run all tests.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -34,7 +39,15 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: npx playwright test
+        run: |
+          FILTER="${{ inputs.test_filter }}"
+          if [ -z "$FILTER" ]; then
+            npx playwright test
+          elif echo "$FILTER" | grep -q '\.spec\.ts'; then
+            npx playwright test "$FILTER"
+          else
+            npx playwright test --grep "$FILTER"
+          fi
         env:
           CI: true
           ALUMNI_FORM_URL: ${{ secrets.ALUMNI_FORM_URL }}
