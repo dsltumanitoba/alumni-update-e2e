@@ -7,9 +7,19 @@ on:
   workflow_dispatch:
     inputs:
       test_filter:
-        description: 'Test to run — file name (e.g. validation.spec.ts) or grep pattern (e.g. "personal contact"). Leave blank to run all tests.'
+        description: 'Test to run'
         required: false
-        default: ''
+        default: 'All tests'
+        type: choice
+        options:
+          - All tests
+          - personal-contact.spec.ts
+          - business-contact.spec.ts
+          - combined-update.spec.ts
+          - notice-of-decease.spec.ts
+          - no-email.spec.ts
+          - graduation-name.spec.ts
+          - validation.spec.ts
 
 permissions:
   contents: read
@@ -41,12 +51,10 @@ jobs:
       - name: Run Playwright tests
         run: |
           FILTER="${{ inputs.test_filter }}"
-          if [ -z "$FILTER" ]; then
+          if [ -z "$FILTER" ] || [ "$FILTER" = "All tests" ]; then
             npx playwright test
-          elif echo "$FILTER" | grep -q '\.spec\.ts'; then
-            npx playwright test "$FILTER"
           else
-            npx playwright test --grep "$FILTER"
+            npx playwright test "$FILTER"
           fi
         env:
           CI: true
