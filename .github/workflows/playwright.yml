@@ -13,13 +13,13 @@ on:
         type: choice
         options:
           - All tests
-          - personal-contact.spec.ts
-          - business-contact.spec.ts
-          - combined-update.spec.ts
-          - notice-of-decease.spec.ts
-          - no-email.spec.ts
-          - graduation-name.spec.ts
-          - validation.spec.ts
+          - 'Journey 1: Update personal contact information'
+          - 'Journey 2: Update business contact information'
+          - 'Journey 3: Submit a notice of decease'
+          - 'Journey 4: Update personal and business contact information together'
+          - 'Journey 5: Alumni with no email address'
+          - 'Journey 6: Alumni with graduation name different from current name'
+          - 'Form validation'
 
 permissions:
   contents: read
@@ -50,12 +50,24 @@ jobs:
 
       - name: Run Playwright tests
         run: |
-          FILTER="${{ inputs.test_filter }}"
-          if [ -z "$FILTER" ] || [ "$FILTER" = "All tests" ]; then
-            npx playwright test
-          else
-            npx playwright test "$FILTER"
-          fi
+          case "${{ inputs.test_filter }}" in
+            "All tests"|"")
+              npx playwright test ;;
+            "Journey 1: Update personal contact information")
+              npx playwright test tests/happy-paths/personal-contact.spec.ts ;;
+            "Journey 2: Update business contact information")
+              npx playwright test tests/happy-paths/business-contact.spec.ts ;;
+            "Journey 3: Submit a notice of decease")
+              npx playwright test tests/happy-paths/notice-of-decease.spec.ts ;;
+            "Journey 4: Update personal and business contact information together")
+              npx playwright test tests/happy-paths/combined-update.spec.ts ;;
+            "Journey 5: Alumni with no email address")
+              npx playwright test tests/happy-paths/no-email.spec.ts ;;
+            "Journey 6: Alumni with graduation name different from current name")
+              npx playwright test tests/happy-paths/graduation-name.spec.ts ;;
+            "Form validation")
+              npx playwright test tests/validation/validation.spec.ts ;;
+          esac
         env:
           CI: true
           ALUMNI_FORM_URL: ${{ secrets.ALUMNI_FORM_URL }}
