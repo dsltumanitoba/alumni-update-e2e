@@ -290,11 +290,11 @@ test.describe('Intentional failure demo', () => {
 
     await form.submit();
 
-    // Wait for the success banner to confirm the form actually submitted.
-    await expect(form.successBannerHeading).toBeVisible();
-
-    // Intentionally wrong assertion — checks for text that will never match,
-    // producing a clear expected-vs-actual diff in the failure report.
-    await expect(form.successBannerHeading).toHaveText('Wrong expected text — this assertion always fails');
+    // Synchronous assertion that always fails immediately — no timeout, no
+    // network dependency, always produces a red step in the report.
+    expect(
+      'Thank you for submitting your contact updates',
+      'INTENTIONAL: This assertion is designed to fail to demonstrate what a test failure looks like',
+    ).toBe('Wrong expected text that will never match');
   });
 });
