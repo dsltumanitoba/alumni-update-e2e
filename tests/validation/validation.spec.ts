@@ -290,8 +290,11 @@ test.describe('Intentional failure demo', () => {
 
     await form.submit();
 
-    // Intentionally wrong assertion — the banner IS visible after a successful
-    // submission, so asserting .not.toBeVisible() will always fail.
-    await expect(form.successBannerHeading).not.toBeVisible();
+    // Wait for the success banner to confirm the form actually submitted.
+    await expect(form.successBannerHeading).toBeVisible();
+
+    // Intentionally wrong assertion — checks for text that will never match,
+    // producing a clear expected-vs-actual diff in the failure report.
+    await expect(form.successBannerHeading).toHaveText('Wrong expected text — this assertion always fails');
   });
 });
