@@ -274,3 +274,24 @@ test.describe('Form validation', () => {
     await expect(form.successBannerHeading).not.toBeVisible();
   });
 });
+
+test.describe('Intentional failure demo', () => {
+  // This test is intentionally designed to fail.
+  // It submits a fully valid form (which succeeds) but then asserts the
+  // wrong outcome, demonstrating what a Playwright failure report looks like.
+  test('Form submission succeeds but test expects it to fail [INTENTIONAL]', async ({ page }) => {
+    const form = new AlumniFormPage(page);
+    await form.goto();
+
+    await form.fillFirstName(TEST_USER.firstName);
+    await form.fillLastName(TEST_USER.lastName);
+    await form.fillEmail(generateEmail());
+    await form.selectFaculty(TEST_USER.faculty);
+
+    await form.submit();
+
+    // Intentionally wrong assertion — the banner IS visible after a successful
+    // submission, so asserting .not.toBeVisible() will always fail.
+    await expect(form.successBannerHeading).not.toBeVisible();
+  });
+});

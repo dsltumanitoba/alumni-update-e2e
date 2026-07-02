@@ -20,6 +20,7 @@ on:
           - 'Journey 5: Alumni with no email address'
           - 'Journey 6: Alumni with graduation name different from current name'
           - 'Form validation'
+          - 'Intentional failure demo'
 
 permissions:
   contents: read
@@ -67,6 +68,8 @@ jobs:
               npx playwright test tests/happy-paths/graduation-name.spec.ts ;;
             "Form validation")
               npx playwright test tests/validation/validation.spec.ts ;;
+            "Intentional failure demo")
+              npx playwright test tests/validation/validation.spec.ts --grep "Intentional failure demo" ;;
           esac
         env:
           CI: true
