@@ -53,7 +53,7 @@ jobs:
         run: |
           case "${{ inputs.test_filter }}" in
             "All tests"|"")
-              npx playwright test ;;
+              npx playwright test --grep-invert "Intentional failure demo" ;;
             "Journey 1: Update personal contact information")
               npx playwright test tests/happy-paths/personal-contact.spec.ts ;;
             "Journey 2: Update business contact information")
@@ -67,7 +67,7 @@ jobs:
             "Journey 6: Alumni with graduation name different from current name")
               npx playwright test tests/happy-paths/graduation-name.spec.ts ;;
             "Form validation")
-              npx playwright test tests/validation/validation.spec.ts ;;
+              npx playwright test tests/validation/validation.spec.ts --grep-invert "Intentional failure demo" ;;
             "Intentional failure demo")
               npx playwright test tests/validation/validation.spec.ts --grep "Intentional failure demo" ;;
           esac
