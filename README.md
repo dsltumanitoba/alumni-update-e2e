@@ -85,6 +85,10 @@ Pages site at **two** stable URLs:
 
 Individual archived runs live at `.../runs/<run#>-<timestamp>/`.
 
+Every published report (latest and archived) also carries a **"↩ View run
+history"** link fixed to its top-right corner, so you can jump to the history
+index from any report link you're handed — not just from the site root.
+
 ### How history is kept
 
 GitHub allows only one Pages site per repo, and the default deploy replaces the
@@ -97,7 +101,10 @@ whole site each run. To retain history without losing the latest-results URL:
    commits it back.
 3. `scripts/build-history.mjs` regenerates the history index page from the
    retained runs' metadata.
-4. The workflow then assembles the site published to Pages: the latest report at
+4. `scripts/inject-history-link.mjs` stamps the "View run history" link into
+   the report's `index.html` before it's archived, so every copy of the
+   report (latest, and each archived run) carries it.
+5. The workflow then assembles the site published to Pages: the latest report at
    the root, plus `runs/` and `history/`.
 
 Retention is controlled by `KEEP_RUNS` in the workflow (default `50`). Raw

@@ -53,6 +53,17 @@ EOF
 fi
 
 # --------------------------------------------------------------------------
+# 1b. Inject a "View run history" link into the report so it's reachable
+#     from the latest report, every archived run, and wherever the report
+#     link gets shared — not just from GitHub's deployment card, which only
+#     has room for one URL.
+# --------------------------------------------------------------------------
+OWNER="$(echo "${REPO}" | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
+REPO_NAME="$(echo "${REPO}" | cut -d/ -f2)"
+PAGES_BASE_URL="https://${OWNER}.github.io/${REPO_NAME}/"
+node scripts/inject-history-link.mjs "${REPORT_DIR}" "${PAGES_BASE_URL}history/"
+
+# --------------------------------------------------------------------------
 # 2. Fetch (or create) the archive branch.
 # --------------------------------------------------------------------------
 # HISTORY_REMOTE lets tests point at a local repo; CI uses the token URL.
