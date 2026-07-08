@@ -70,3 +70,36 @@ To open the HTML report after a run:
 ```bash
 npx playwright show-report
 ```
+
+---
+
+## Published Reports (GitHub Pages)
+
+Every CI run (`.github/workflows/playwright.yml`) publishes to a single GitHub
+Pages site at **two** stable URLs:
+
+| URL | What it shows |
+|-----|---------------|
+| `https://dsltumanitoba.github.io/alumni-update-e2e/` | **Latest run** — always the most recent report. Unchanged; bookmark-safe. |
+| `https://dsltumanitoba.github.io/alumni-update-e2e/history/` | **Run history** — a table of every retained run (date, status, journey, trigger) with a link to each run's full report. |
+
+Individual archived runs live at `.../runs/<run#>-<timestamp>/`.
+
+### How history is kept
+
+GitHub allows only one Pages site per repo, and the default deploy replaces the
+whole site each run. To retain history without losing the latest-results URL:
+
+1. Each run's report is committed to a dedicated **`test-history`** orphan
+   branch (the durable archive — never checked out during normal development).
+2. `scripts/publish-history.sh` fetches that branch, adds the new run under
+   `runs/<slug>/` with a `meta.json`, prunes to the most recent **50** runs, and
+   commits it back.
+3. `scripts/build-history.mjs` regenerates the history index page from the
+   retained runs' metadata.
+4. The workflow then assembles the site published to Pages: the latest report at
+   the root, plus `runs/` and `history/`.
+
+Retention is controlled by `KEEP_RUNS` in the workflow (default `50`). Raw
+report zips are also uploaded as workflow artifacts (30-day retention)
+regardless of the Pages retention limit.

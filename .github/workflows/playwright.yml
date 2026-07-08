@@ -23,9 +23,15 @@ on:
           - 'Intentional failure demo'
 
 permissions:
-  contents: read
+  contents: write   # push archived reports to the test-history branch
   pages: write
   id-token: write
+
+# Serialise runs so two workflows never race on the test-history branch or the
+# GitHub Pages deployment.
+concurrency:
+  group: e2e-pages
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -50,6 +56,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
+        id: tests
         run: |
           case "${{ inputs.test_filter }}" in
             "All tests"|"")
@@ -83,11 +90,30 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      # Archive this run into the durable `test-history` branch, prune to the
+      # last 50 runs, regenerate the history index, and assemble ./site
+      # (latest report at the root + /runs/ + /history/).
+      - name: Archive run and rebuild history site
+        if: always()
+        run: bash scripts/publish-history.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SERVER_URL: ${{ github.server_url }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_STATUS: ${{ steps.tests.outcome }}
+          ACTOR: ${{ github.actor }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+          TEST_FILTER: ${{ inputs.test_filter }}
+          KEEP_RUNS: '50'
+
       - name: Upload to GitHub Pages
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
-          path: playwright-report/
+          path: site/
 
       - name: Deploy to GitHub Pages
         if: always()
