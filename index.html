@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E2E Test Run History — UM Alumni Update Form</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1f2328;
+      background: #f6f8fa;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+    header { margin-bottom: 24px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: #57606a; font-size: 14px; margin: 0; }
+    .toolbar { margin: 16px 0 20px; }
+    .toolbar a {
+      display: inline-block; text-decoration: none; font-weight: 600; font-size: 14px;
+      color: #0969da; padding: 8px 14px; border: 1px solid #d0d7de; border-radius: 6px;
+      background: #fff;
+    }
+    .toolbar a:hover { background: #f3f4f6; }
+    .card {
+      background: #fff; border: 1px solid #d0d7de; border-radius: 8px; overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid #eaeef2; white-space: nowrap; }
+    th { background: #f6f8fa; font-weight: 600; color: #57606a; position: sticky; top: 0; }
+    tr:last-child td { border-bottom: none; }
+    td.num { font-variant-numeric: tabular-nums; color: #57606a; }
+    td.empty { text-align: center; color: #57606a; padding: 32px; }
+    a.report-link { color: #0969da; text-decoration: none; font-weight: 600; }
+    a.report-link:hover { text-decoration: underline; }
+    td.ci a { color: #57606a; text-decoration: none; }
+    td.ci a:hover { text-decoration: underline; }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    }
+    .badge.pass { background: #dafbe1; color: #1a7f37; }
+    .badge.fail { background: #ffebe9; color: #cf222e; }
+    .badge.other { background: #eaeef2; color: #57606a; }
+    footer { margin-top: 20px; color: #8c959f; font-size: 12px; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6edf3; background: #0d1117; }
+      .sub { color: #9198a1; }
+      .toolbar a { color: #4493f8; border-color: #30363d; background: #161b22; }
+      .toolbar a:hover { background: #21262d; }
+      .card { background: #161b22; border-color: #30363d; }
+      th, td { border-bottom-color: #21262d; }
+      th { background: #161b22; color: #9198a1; }
+      td.num, td.empty, td.ci a { color: #9198a1; }
+      a.report-link { color: #4493f8; }
+      .badge.pass { background: #12261e; color: #3fb950; }
+      .badge.fail { background: #291415; color: #f85149; }
+      .badge.other { background: #21262d; color: #9198a1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>E2E Test Run History</h1>
+      <p class="sub">University of Manitoba — Alumni Contact Update Form · every run archived, newest first.</p>
+    </header>
+
+    <div class="toolbar">
+      <a href="../">← View latest results</a>
+    </div>
+
+    <div class="card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Run</th>
+              <th>When</th>
+              <th>Status</th>
+              <th>Journey</th>
+              <th>Trigger</th>
+              <th>Report</th>
+              <th>CI</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="num">#19</td>
+          <td>2026-07-08 17:32 UTC</td>
+          <td><span class="badge pass">Passed</span></td>
+          <td>All tests</td>
+          <td>Manual · dsltumanitoba</td>
+          <td><a class="report-link" href="../runs/19-20260708T173253Z/">Open report →</a></td>
+          <td class="ci"><a href="https://github.com/dsltumanitoba/alumni-update-e2e/actions/runs/28962697457" target="_blank" rel="noopener">CI&nbsp;log&nbsp;↗</a></td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      Showing 1 run · generated 2026-07-08 17:32 UTC
+    </footer>
+  </div>
+</body>
+</html>
