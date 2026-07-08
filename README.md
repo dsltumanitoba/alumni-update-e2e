@@ -89,6 +89,12 @@ Every published report (latest and archived) also carries a **"↩ View run
 history"** link fixed to its top-right corner, so you can jump to the history
 index from any report link you're handed — not just from the site root.
 
+The link GitHub shows on a run's summary page (the "environment" deployment
+card) points at that run's own archived, immutable `/runs/<slug>/` page —
+not the root — since the root URL is cached for up to 10 minutes by GitHub
+Pages and can silently show stale content until a hard reload. The archived
+path is unique per run, so it's never stale.
+
 ### How history is kept
 
 GitHub allows only one Pages site per repo, and the default deploy replaces the

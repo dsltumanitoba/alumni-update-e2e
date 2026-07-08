@@ -39,10 +39,22 @@ jobs:
     timeout-minutes: 30
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      # Point at this run's own archived, immutable page rather than the
+      # shared root — the root URL is cached for 10 min by GitHub Pages
+      # (Cache-Control: max-age=600, not overridable), so a browser that
+      # visited it recently can silently show stale content. The archived
+      # path is unique per run and never gets stale.
+      url: ${{ steps.deploy.outputs.page_url }}runs/${{ steps.run-meta.outputs.slug }}/
 
     steps:
       - uses: actions/checkout@v4
+
+      # Computed once, up front, so both the environment URL above and the
+      # archive step below agree on the exact same slug for this run.
+      - name: Compute run slug
+        id: run-meta
+        run: |
+          echo "slug=${{ github.run_number }}-$(date -u +%Y%m%dT%H%M%SZ)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         with:
@@ -102,6 +114,7 @@ jobs:
           SERVER_URL: ${{ github.server_url }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ID: ${{ github.run_id }}
+          SLUG: ${{ steps.run-meta.outputs.slug }}
           RUN_STATUS: ${{ steps.tests.outcome }}
           ACTOR: ${{ github.actor }}
           EVENT: ${{ github.event_name }}

@@ -19,6 +19,11 @@
 # Required env (provided by the workflow):
 #   GITHUB_TOKEN, REPO (owner/name), SERVER_URL, RUN_NUMBER, RUN_ID,
 #   RUN_STATUS, ACTOR, EVENT, SHA, TEST_FILTER, KEEP_RUNS
+# Optional env:
+#   SLUG — precomputed by the workflow's "Compute run slug" step so the
+#          job's environment URL (which points at runs/<slug>/) matches
+#          exactly what gets archived here. Falls back to computing its own
+#          for local/manual invocations.
 
 set -euo pipefail
 
@@ -28,9 +33,8 @@ SITE="site"
 HISTORY_BRANCH="test-history"
 KEEP_RUNS="${KEEP_RUNS:-50}"
 
-TS_COMPACT="$(date -u +%Y%m%dT%H%M%SZ)"
 TS_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-SLUG="${RUN_NUMBER}-${TS_COMPACT}"
+SLUG="${SLUG:-${RUN_NUMBER}-$(date -u +%Y%m%dT%H%M%SZ)}"
 
 echo "=== Publishing run ${SLUG} (status: ${RUN_STATUS:-unknown}) ==="
 
